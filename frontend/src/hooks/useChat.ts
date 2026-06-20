@@ -57,16 +57,18 @@ export function useChat() {
   );
 
   const acceptAction = useCallback(
-    async (actionId: string) => {
+    async (actionId: string): Promise<unknown> => {
       const action = rawPendingActions.find((a) => a.id === actionId);
-      if (!action) return;
+      if (!action) return null;
       try {
-        await applyAction(action);
+        const result = await applyAction(action);
         setRawPendingActions((prev) =>
           prev.map((a) => (a.id === actionId ? { ...a, status: "ACCEPTED" } : a)),
         );
+        return result.record;
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to apply action");
+        return null;
       }
     },
     [rawPendingActions],

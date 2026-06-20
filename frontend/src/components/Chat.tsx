@@ -1,10 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useChat } from "../hooks/useChat";
+import { useApp } from "../context/AppContext";
 import { MessageBubble } from "./MessageBubble";
+import type { TimelineNode } from "../types";
 
 export function Chat() {
   const { history, pendingActions, isLoading, error, sendUserMessage, acceptAction, denyAction } =
     useChat();
+  const { addTimelineNode } = useApp();
+
+  const handleAccept = useCallback(async (actionId: string) => {
+    const record = await acceptAction(actionId);
+    if (record && (record as TimelineNode).nodeId) {
+      addTimelineNode(record as TimelineNode, false);
+    }
+  }, [acceptAction, addTimelineNode]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -36,7 +46,7 @@ export function Chat() {
             message={message}
             turnIndex={i}
             pendingActions={pendingActions}
-            onAccept={acceptAction}
+            onAccept={handleAccept}
             onDeny={denyAction}
           />
         ))}

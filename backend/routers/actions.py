@@ -17,7 +17,5 @@ async def apply(
     req: ApplyActionRequest,
     patient: dict = Depends(get_current_patient),
 ):
-    # Revalidate before writing — guards against malformed or tampered payloads
-    SuggestedAction.model_validate(req.action.model_dump())
     record = await apply_action(req.action, patient["id"])
     return {"record": record}

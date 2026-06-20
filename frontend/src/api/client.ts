@@ -1,10 +1,11 @@
 import type { AssistantMessage, Message, PendingAction } from "../types/chat";
+import { TOKEN_KEY } from "../services/api";
 
-const BASE = "";
+const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
 function getAuthHeader(): string {
-  const patientId = localStorage.getItem("patientId") ?? "";
-  return `Bearer ${patientId}`;
+  const token = localStorage.getItem(TOKEN_KEY) ?? "";
+  return `Bearer ${token}`;
 }
 
 export async function sendMessage(
