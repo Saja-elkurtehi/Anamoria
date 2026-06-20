@@ -11,7 +11,7 @@ import TimelineView from '../../components/timeline/TimelineView';
 import VerificationBadge from '../../components/shared/VerificationBadge';
 import SourceBadge from '../../components/shared/SourceBadge';
 import VisitFormModal from '../../components/physician/VisitFormModal';
-import type { TimelineNode, SymptomDetails } from '../../types';
+import type { TimelineNode, SymptomDetails, PhysicianNode } from '../../types';
 
 type TabKey = 'overview' | 'timeline' | 'documents' | 'visit_notes';
 
@@ -317,25 +317,37 @@ function SymptomCards({ nodes, onTimelineClick }: { nodes: TimelineNode[]; onTim
 
 function VisitNotesTab() {
   const { state, addTimelineNode } = useApp();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<any>({
     visitDate: new Date().toISOString().split('T')[0],
     reason: '',
     summary: '',
     assessment: '',
     plan: '',
+    visitInformation: { newPatient: false, followUp: false, annualPhysical: false, urgentVisit: false, telehealth: false },
+    duration: { unit: 'DAYS', value: undefined },
+    severity: 'MILD',
+    severityNotes: '',
+    symptoms: [] as Array<any>,
+    vitalsTaken: false,
+    vitals: { bloodPressure: '', heartRate: undefined, temperature: undefined, respiratoryRate: undefined, spO2: undefined, weight: undefined, height: undefined, bmi: undefined, notes: '' },
   });
+  const [newSymptom, setNewSymptom] = useState<any>({ symptom: '', severity: undefined, timing: 'CONSTANT', notes: '' });
   const [submitted, setSubmitted] = useState(false);
 
-  const existingNotes = state.timelineNodes.filter(
-    n => n.type === 'PHYSICIAN_ENTERED' && n.contributorRole === 'PHYSICIAN'
-  ).sort((a, b) => b.eventDate.localeCompare(a.eventDate));
+  const existingNotes = state.timelineNodes
+    .filter(n =>
+      n.contributorRole === 'PHYSICIAN' && (
+        n.type === 'PHYSICIAN_ENTERED' || (n as any).entryType !== undefined || (n as any).details?.entryType !== undefined
+      )
+    )
+    .sort((a, b) => b.eventDate.localeCompare(a.eventDate));
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.summary.trim()) return;
 
     const now = new Date().toISOString();
-    const node: TimelineNode = {
+    const node: PhysicianNode = {
       nodeId: `node-visit-${Date.now()}`,
       patientId: DEMO_PATIENT_ID,
       type: 'PHYSICIAN_ENTERED',
@@ -351,6 +363,7 @@ function VisitNotesTab() {
       relatedDocumentIds: [],
       relatedNodeIds: [],
       tags: ['visit-note', 'physician'],
+      // keep legacy `details` shape for compatibility with existing UI
       details: {
         entryType: 'VISIT_SUMMARY',
         physicianName: 'Dr. Amir Khan',
@@ -364,13 +377,42 @@ function VisitNotesTab() {
         changesMade: form.reason.trim() || 'Physician visit',
         followUpPlan: form.plan.trim() || undefined,
       },
+      // new PhysicianNode fields
+      // top-level physician fields for easier consumption elsewhere
+      physicianName: 'Dr. Amir Khan',
+      physicianClinic: 'Riverside Family Health Clinic',
+      entryType: 'VISIT_SUMMARY',
+      checklist: {
+        visitInformation: (form as any).visitInformation,
+        reasonForVisit: form.reason.trim() || undefined,
+        chiefComplaint: form.summary.trim() || undefined,
+        duration: form.duration?.value ? { unit: form.duration.unit, value: form.duration.value } : undefined,
+        severity: form.severity ?? undefined,
+        severityNotes: form.severityNotes || undefined,
+        symptoms: form.symptoms && form.symptoms.length > 0 ? form.symptoms.map((s: any) => ({ symptom: s.symptom, severity: s.severity, timing: s.timing, notes: s.notes })) : undefined,
+        vitalsTaken: form.vitalsTaken || false,
+        vitals: form.vitals && Object.keys(form.vitals).length > 0 ? form.vitals : undefined,
+      },
+      assessment: form.assessment.trim() || undefined,
+      notes: form.plan.trim() || undefined,
       physicianNotes: [],
       createdAt: now,
       updatedAt: now,
     };
 
+    // debug helpers: expose the created node so you can inspect it in the browser console
+    try {
+      (window as any).__lastCreatedPhysicianNode = node;
+      localStorage.setItem('last_created_physician_node', JSON.stringify(node));
+      // also log for convenience
+      // eslint-disable-next-line no-console
+      console.log('Created physician node:', node);
+    } catch (err) {
+      // ignore
+    }
+
     addTimelineNode(node);
-    setForm({ visitDate: new Date().toISOString().split('T')[0], reason: '', summary: '', assessment: '', plan: '' });
+    setForm({ visitDate: new Date().toISOString().split('T')[0], reason: '', summary: '', assessment: '', plan: '', visitInformation: { newPatient: false, followUp: false, annualPhysical: false, urgentVisit: false, telehealth: false } });
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 4000);
   }
@@ -392,6 +434,56 @@ function VisitNotesTab() {
               onChange={e => setForm(f => ({ ...f, visitDate: e.target.value }))}
               className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-300"
             />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Visit type</label>
+            <div className="flex gap-3 flex-wrap">
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="checkbox"
+                  checked={(form as any).visitInformation?.newPatient || false}
+                  onChange={e => setForm(f => ({ ...(f as any), visitInformation: { ...(f as any).visitInformation, newPatient: e.target.checked } }))}
+                  className="mr-2"
+                />
+                New patient
+              </label>
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="checkbox"
+                  checked={(form as any).visitInformation?.followUp || false}
+                  onChange={e => setForm(f => ({ ...(f as any), visitInformation: { ...(f as any).visitInformation, followUp: e.target.checked } }))}
+                  className="mr-2"
+                />
+                Follow-up
+              </label>
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="checkbox"
+                  checked={(form as any).visitInformation?.annualPhysical || false}
+                  onChange={e => setForm(f => ({ ...(f as any), visitInformation: { ...(f as any).visitInformation, annualPhysical: e.target.checked } }))}
+                  className="mr-2"
+                />
+                Annual physical
+              </label>
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="checkbox"
+                  checked={(form as any).visitInformation?.urgentVisit || false}
+                  onChange={e => setForm(f => ({ ...(f as any), visitInformation: { ...(f as any).visitInformation, urgentVisit: e.target.checked } }))}
+                  className="mr-2"
+                />
+                Urgent visit
+              </label>
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="checkbox"
+                  checked={(form as any).visitInformation?.telehealth || false}
+                  onChange={e => setForm(f => ({ ...(f as any), visitInformation: { ...(f as any).visitInformation, telehealth: e.target.checked } }))}
+                  className="mr-2"
+                />
+                Telehealth
+              </label>
+            </div>
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Reason for visit</label>
@@ -424,6 +516,151 @@ function VisitNotesTab() {
               className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-violet-300"
             />
           </div>
+
+          {/* Duration & Severity */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Duration</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  value={form.duration?.value ?? ''}
+                  onChange={e => setForm((f: any) => ({ ...f, duration: { ...(f.duration || {}), value: e.target.value ? Number(e.target.value) : undefined } }))}
+                  className="w-24 text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-300"
+                />
+                <select
+                  value={form.duration?.unit}
+                  onChange={e => setForm((f: any) => ({ ...f, duration: { ...(f.duration || {}), unit: e.target.value } }))}
+                  className="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-300"
+                >
+                  <option value="TODAY">Today</option>
+                  <option value="DAYS">Days</option>
+                  <option value="WEEKS">Weeks</option>
+                  <option value="MONTHS">Months</option>
+                  <option value="YEARS">Years</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Severity</label>
+              <div className="flex gap-2 items-center">
+                <select
+                  value={form.severity}
+                  onChange={e => setForm((f: any) => ({ ...f, severity: e.target.value }))}
+                  className="text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-300"
+                >
+                  <option value="MILD">Mild</option>
+                  <option value="MODERATE">Moderate</option>
+                  <option value="SEVERE">Severe</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Severity notes"
+                  value={form.severityNotes}
+                  onChange={e => setForm((f: any) => ({ ...f, severityNotes: e.target.value }))}
+                  className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-300"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Symptoms list */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Symptoms</label>
+            <div className="space-y-2">
+              {(form.symptoms || []).map((s: any, i: number) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    placeholder="Symptom"
+                    value={s.symptom}
+                    onChange={e => setForm((f: any) => { const ss = [...(f.symptoms || [])]; ss[i] = { ...ss[i], symptom: e.target.value }; return { ...f, symptoms: ss }; })}
+                    className="text-sm border border-gray-200 rounded-xl px-3 py-2.5 w-48"
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    placeholder="Severity 1-10"
+                    value={s.severity ?? ''}
+                    onChange={e => setForm((f: any) => { const ss = [...(f.symptoms || [])]; ss[i] = { ...ss[i], severity: e.target.value ? Number(e.target.value) : undefined }; return { ...f, symptoms: ss }; })}
+                    className="text-sm border border-gray-200 rounded-xl px-3 py-2.5 w-28"
+                  />
+                  <select
+                    value={s.timing || 'CONSTANT'}
+                    onChange={e => setForm((f: any) => { const ss = [...(f.symptoms || [])]; ss[i] = { ...ss[i], timing: e.target.value }; return { ...f, symptoms: ss }; })}
+                    className="text-sm border border-gray-200 rounded-xl px-3 py-2.5"
+                  >
+                    <option value="CONSTANT">Constant</option>
+                    <option value="INTERMITTENT">Intermittent</option>
+                    <option value="IMPROVING">Improving</option>
+                    <option value="WORSENING">Worsening</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Notes"
+                    value={s.notes || ''}
+                    onChange={e => setForm((f: any) => { const ss = [...(f.symptoms || [])]; ss[i] = { ...ss[i], notes: e.target.value }; return { ...f, symptoms: ss }; })}
+                    className="text-sm border border-gray-200 rounded-xl px-3 py-2.5 flex-1"
+                  />
+                  <button type="button" onClick={() => setForm((f: any) => ({ ...f, symptoms: (f.symptoms || []).filter((_: any, idx: number) => idx !== i) }))} className="text-xs text-red-600">Remove</button>
+                </div>
+              ))}
+
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  placeholder="New symptom"
+                  value={newSymptom.symptom}
+                  onChange={e => setNewSymptom((s: any) => ({ ...s, symptom: e.target.value }))}
+                  className="text-sm border border-gray-200 rounded-xl px-3 py-2.5 w-48"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  placeholder="Severity"
+                  value={newSymptom.severity ?? ''}
+                  onChange={e => setNewSymptom((s: any) => ({ ...s, severity: e.target.value ? Number(e.target.value) : undefined }))}
+                  className="text-sm border border-gray-200 rounded-xl px-3 py-2.5 w-24"
+                />
+                <select value={newSymptom.timing} onChange={e => setNewSymptom((s: any) => ({ ...s, timing: e.target.value }))} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5">
+                  <option value="CONSTANT">Constant</option>
+                  <option value="INTERMITTENT">Intermittent</option>
+                  <option value="IMPROVING">Improving</option>
+                  <option value="WORSENING">Worsening</option>
+                </select>
+                <input type="text" placeholder="Notes" value={newSymptom.notes} onChange={e => setNewSymptom((s: any) => ({ ...s, notes: e.target.value }))} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5 flex-1" />
+                <button type="button" onClick={() => { if (!newSymptom.symptom.trim()) return; setForm((f: any) => ({ ...f, symptoms: [...(f.symptoms || []), newSymptom] })); setNewSymptom({ symptom: '', severity: undefined, timing: 'CONSTANT', notes: '' }); }} className="text-sm bg-violet-600 text-white px-3 py-2 rounded-xl">Add</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Vitals */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Vitals</label>
+            <div className="flex items-center gap-2 mb-2">
+              <label className="inline-flex items-center text-sm">
+                <input type="checkbox" checked={form.vitalsTaken} onChange={e => setForm((f: any) => ({ ...f, vitalsTaken: e.target.checked }))} className="mr-2" />
+                Vitals taken
+              </label>
+            </div>
+            {form.vitalsTaken && (
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" placeholder="BP (e.g. 120/80)" value={form.vitals.bloodPressure} onChange={e => setForm((f: any) => ({ ...f, vitals: { ...(f.vitals || {}), bloodPressure: e.target.value } }))} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5" />
+                <input type="number" placeholder="HR (bpm)" value={form.vitals.heartRate ?? ''} onChange={e => setForm((f: any) => ({ ...f, vitals: { ...(f.vitals || {}), heartRate: e.target.value ? Number(e.target.value) : undefined } }))} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5" />
+                <input type="number" placeholder="Temp (°C)" value={form.vitals.temperature ?? ''} onChange={e => setForm((f: any) => ({ ...f, vitals: { ...(f.vitals || {}), temperature: e.target.value ? Number(e.target.value) : undefined } }))} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5" />
+                <input type="number" placeholder="RR" value={form.vitals.respiratoryRate ?? ''} onChange={e => setForm((f: any) => ({ ...f, vitals: { ...(f.vitals || {}), respiratoryRate: e.target.value ? Number(e.target.value) : undefined } }))} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5" />
+                <input type="number" placeholder="SpO₂ (%)" value={form.vitals.spO2 ?? ''} onChange={e => setForm((f: any) => ({ ...f, vitals: { ...(f.vitals || {}), spO2: e.target.value ? Number(e.target.value) : undefined } }))} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5" />
+                <input type="number" placeholder="Weight (kg)" value={form.vitals.weight ?? ''} onChange={e => setForm((f: any) => { const vit = { ...(f.vitals || {}), weight: e.target.value ? Number(e.target.value) : undefined }; if (vit.weight && vit.height) { vit.bmi = Math.round((vit.weight / ((vit.height / 100) ** 2)) * 10) / 10; } return { ...f, vitals: vit }; })} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5" />
+                <input type="number" placeholder="Height (cm)" value={form.vitals.height ?? ''} onChange={e => setForm((f: any) => { const vit = { ...(f.vitals || {}), height: e.target.value ? Number(e.target.value) : undefined }; if (vit.weight && vit.height) { vit.bmi = Math.round((vit.weight / ((vit.height / 100) ** 2)) * 10) / 10; } return { ...f, vitals: vit }; })} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5" />
+                <input type="number" placeholder="BMI" value={form.vitals.bmi ?? ''} onChange={e => setForm((f: any) => ({ ...f, vitals: { ...(f.vitals || {}), bmi: e.target.value ? Number(e.target.value) : undefined } }))} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5" />
+                <input type="text" placeholder="Vitals notes" value={form.vitals.notes} onChange={e => setForm((f: any) => ({ ...f, vitals: { ...(f.vitals || {}), notes: e.target.value } }))} className="text-sm border border-gray-200 rounded-xl px-3 py-2.5 col-span-2" />
+              </div>
+            )}
+          </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Plan / follow-up</label>
             <textarea
@@ -455,15 +692,131 @@ function VisitNotesTab() {
       <div>
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Previous physician notes</h3>
         <div className="space-y-3">
-          {existingNotes.slice(0, 5).map(n => (
-            <div key={n.nodeId} className="bg-white border border-violet-100 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-violet-700">{n.contributorName}</p>
-                <p className="text-xs text-gray-400">{new Date(n.eventDate).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+          {existingNotes.slice(0, 5).map(n => {
+            const topEntry = (n as any).entryType;
+            const detailsEntry = (n as any).details?.entryType;
+            const isPhysNode = topEntry !== undefined || detailsEntry !== undefined;
+            const p = n as PhysicianNode;
+            const entryType = topEntry ?? detailsEntry;
+            const detailsLegacy = (n as any).details ?? {};
+
+            return (
+              <div key={n.nodeId} className="bg-white border border-violet-100 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-violet-700">{n.contributorName}</p>
+                  <p className="text-xs text-gray-400">{new Date(n.eventDate).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                </div>
+
+                {isPhysNode ? (
+                  <div>
+                    <p className="text-sm text-gray-700 leading-relaxed">{n.summary ?? detailsLegacy.note}</p>
+
+                    <div className="mt-3 grid grid-cols-1 gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-medium text-gray-500">Type:</span>
+                        <span className="text-xs font-semibold text-violet-700">{entryType}</span>
+                      </div>
+
+                      {/* Visit flags */}
+                      {(p.checklist?.visitInformation || detailsLegacy.visitInformation) && (
+                        <div className="flex gap-2 flex-wrap">
+                          {((p.checklist?.visitInformation) ? p.checklist.visitInformation : detailsLegacy.visitInformation).newPatient && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">New Patient</span>}
+                          {((p.checklist?.visitInformation) ? p.checklist.visitInformation : detailsLegacy.visitInformation).followUp && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">Follow-up</span>}
+                          {((p.checklist?.visitInformation) ? p.checklist.visitInformation : detailsLegacy.visitInformation).annualPhysical && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">Annual Physical</span>}
+                          {((p.checklist?.visitInformation) ? p.checklist.visitInformation : detailsLegacy.visitInformation).urgentVisit && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">Urgent Visit</span>}
+                          {((p.checklist?.visitInformation) ? p.checklist.visitInformation : detailsLegacy.visitInformation).telehealth && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">Telehealth</span>}
+                        </div>
+                      )}
+
+                      {/* Reason / Chief complaint */}
+                      {(p.checklist?.reasonForVisit || detailsLegacy.changesMade || detailsLegacy.reasonForVisit) && (
+                        <div>
+                          <p className="text-xs text-gray-500">Reason for visit</p>
+                          <p className="text-sm text-gray-700">{p.checklist?.reasonForVisit ?? detailsLegacy.changesMade ?? detailsLegacy.reasonForVisit}</p>
+                        </div>
+                      )}
+
+                      {(p.checklist?.chiefComplaint || detailsLegacy.chiefComplaint) && (
+                        <div>
+                          <p className="text-xs text-gray-500">Chief complaint</p>
+                          <p className="text-sm text-gray-700">{p.checklist?.chiefComplaint ?? detailsLegacy.chiefComplaint}</p>
+                        </div>
+                      )}
+
+                      {/* Duration */}
+                      {(p.checklist?.duration || detailsLegacy.duration) && (
+                        <div className="text-sm text-gray-700">
+                          <p className="text-xs text-gray-500">Duration</p>
+                          <p>
+                            {p.checklist?.duration?.value ? `${p.checklist.duration.value} ` : ''}
+                            {p.checklist?.duration?.unit ?? detailsLegacy.duration}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Severity */}
+                      {(p.checklist?.severity || detailsLegacy.severity) && (
+                        <div>
+                          <p className="text-xs text-gray-500">Severity</p>
+                          <p className="text-sm text-gray-700">{p.checklist?.severity ?? detailsLegacy.severity}{p.checklist?.severityNotes ? ` — ${p.checklist.severityNotes}` : ''}</p>
+                        </div>
+                      )}
+
+                      {/* Symptoms */}
+                      {((p.checklist?.symptoms && p.checklist.symptoms.length > 0) || (detailsLegacy.symptoms && detailsLegacy.symptoms.length > 0)) && (
+                        <div>
+                          <p className="text-xs text-gray-500">Symptoms</p>
+                          <div className="mt-1 space-y-1">
+                            {(p.checklist?.symptoms ?? detailsLegacy.symptoms).map((s: any, i: number) => (
+                              <div key={i} className="text-sm text-gray-700">
+                                <strong>{s.symptom || s.name}</strong>{s.severity ? ` — ${s.severity}/10` : ''}{s.timing ? ` · ${s.timing}` : ''}
+                                {s.notes && <div className="text-xs text-gray-500">{s.notes}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Vitals */}
+                      {(p.checklist?.vitals || detailsLegacy.vitals) && (
+                        <div>
+                          <p className="text-xs text-gray-500">Vitals</p>
+                          <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 mt-1">
+                            {((p.checklist?.vitals) ?? detailsLegacy.vitals)?.bloodPressure && <div>BP: {((p.checklist?.vitals) ?? detailsLegacy.vitals).bloodPressure}</div>}
+                            {((p.checklist?.vitals) ?? detailsLegacy.vitals)?.heartRate !== undefined && <div>HR: {((p.checklist?.vitals) ?? detailsLegacy.vitals).heartRate} bpm</div>}
+                            {((p.checklist?.vitals) ?? detailsLegacy.vitals)?.temperature !== undefined && <div>Temp: {((p.checklist?.vitals) ?? detailsLegacy.vitals).temperature} °C</div>}
+                            {((p.checklist?.vitals) ?? detailsLegacy.vitals)?.respiratoryRate !== undefined && <div>RR: {((p.checklist?.vitals) ?? detailsLegacy.vitals).respiratoryRate}</div>}
+                            {((p.checklist?.vitals) ?? detailsLegacy.vitals)?.spO2 !== undefined && <div>SpO₂: {((p.checklist?.vitals) ?? detailsLegacy.vitals).spO2}%</div>}
+                            {((p.checklist?.vitals) ?? detailsLegacy.vitals)?.weight !== undefined && <div>Weight: {((p.checklist?.vitals) ?? detailsLegacy.vitals).weight} kg</div>}
+                            {((p.checklist?.vitals) ?? detailsLegacy.vitals)?.height !== undefined && <div>Height: {((p.checklist?.vitals) ?? detailsLegacy.vitals).height} cm</div>}
+                            {((p.checklist?.vitals) ?? detailsLegacy.vitals)?.bmi !== undefined && <div>BMI: {((p.checklist?.vitals) ?? detailsLegacy.vitals).bmi}</div>}
+                          </div>
+                          {((p.checklist?.vitals) ?? detailsLegacy.vitals)?.notes && <p className="text-xs text-gray-500 mt-1">{((p.checklist?.vitals) ?? detailsLegacy.vitals).notes}</p>}
+                        </div>
+                      )}
+
+                      {/* Assessment / Notes */}
+                      {(p.assessment || detailsLegacy.assessment) && (
+                        <div>
+                          <p className="text-xs text-gray-500">Assessment</p>
+                          <p className="text-sm text-gray-700">{p.assessment ?? detailsLegacy.assessment}</p>
+                        </div>
+                      )}
+
+                      {(p.notes || detailsLegacy.note || detailsLegacy.followUpPlan) && (
+                        <div>
+                          <p className="text-xs text-gray-500">Notes</p>
+                          <p className="text-sm text-gray-700">{p.notes ?? detailsLegacy.note ?? detailsLegacy.followUpPlan}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">{n.summary}</p>
+                )}
               </div>
-              <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">{n.summary}</p>
-            </div>
-          ))}
+            );
+          })}
           {existingNotes.length === 0 && (
             <p className="text-sm text-gray-400 text-center py-6">No physician notes yet.</p>
           )}

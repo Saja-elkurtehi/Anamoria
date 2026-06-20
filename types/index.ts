@@ -227,5 +227,75 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export type PhysicianEntryType =
+  | 'VISIT_SUMMARY'
+  | 'CLINICAL_NOTE'
+  | 'DIAGNOSIS'
+  | 'MEDICATION_CHANGE'
+  | 'CORRECTION'
+  | 'VERIFICATION'
+  | 'FAMILY_HISTORYUPDATE';
+
+export type DurationUnit = 'TODAY' | 'DAYS' | 'WEEKS' | 'MONTHS' | 'YEARS';
+
+export type Timing = 'CONSTANT' | 'INTERMITTENT' | 'IMPROVING' | 'WORSENING';
+
+export type SeverityLevel = 'MILD' | 'MODERATE' | 'SEVERE';
+
+export interface VisitInformationChecklist {
+  newPatient?: boolean;
+  followUp?: boolean;
+  annualPhysical?: boolean;
+  urgentVisit?: boolean;
+  telehealth?: boolean;
+}
+
+export interface DurationInfo {
+  unit: DurationUnit;
+  /** optional numeric value used when unit is DAYS/WEEKS/MONTHS/YEARS */
+  value?: number;
+}
+
+export interface SymptomDetail {
+  symptom: string;
+  /** 1-10 severity rating */
+  severity?: number;
+  timing?: Timing;
+  notes?: string;
+}
+
+export interface Vitals {
+  bloodPressure?: string;
+  heartRate?: number;
+  temperature?: number;
+  respiratoryRate?: number;
+  spO2?: number;
+  weight?: number;
+  height?: number;
+  bmi?: number;
+  notes?: string;
+}
+
+export interface PhysicianChecklist {
+  visitInformation?: VisitInformationChecklist;
+  reasonForVisit?: string;
+  chiefComplaint?: string;
+  duration?: DurationInfo;
+  severity?: SeverityLevel;
+  severityNotes?: string;
+  symptoms?: SymptomDetail[];
+  timingNotes?: string;
+  vitalsTaken?: boolean;
+  vitals?: Vitals;
+  notes?: string;
+}
+
+export interface PhysicianNode extends TimelineNode {
+  entryType: PhysicianEntryType;
+  checklist?: PhysicianChecklist;
+  assessment?: string;
+  notes?: string;
+}
+
 export type ViewMode = 'BRIEF' | 'DEEP';
 export type AppMode = 'patient' | 'physician';

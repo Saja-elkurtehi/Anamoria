@@ -164,6 +164,123 @@ function PhysicianEnteredDetailView({ d }: { d: PhysicianEnteredDetails }) {
   );
 }
 
+function CombinedPhysicianDetailView({ node }: { node: TimelineNode }) {
+  const top = (node as any);
+  const d = node.details as any;
+  const entryType = top.entryType ?? d?.entryType;
+  const physicianName = top.physicianName ?? d?.physicianName;
+  const specialty = d?.specialty;
+  const clinic = top.physicianClinic ?? d?.clinic ?? d?.clinicName;
+  const note = top.notes ?? d?.note ?? top.summary;
+  const assessment = top.assessment ?? d?.assessment;
+  const checklist = top.checklist ?? d;
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <DetailRow label="Entry type" value={entryType ? String(entryType).replace(/_/g, ' ') : undefined} />
+        <DetailRow label="Physician" value={physicianName} />
+        {specialty && <DetailRow label="Specialty" value={specialty} />}
+        {clinic && <DetailRow label="Clinic" value={clinic} />}
+      </div>
+
+      {note && (
+        <div>
+          <SectionLabel>Clinical note</SectionLabel>
+          <p className="text-sm text-gray-800 leading-relaxed">{note}</p>
+        </div>
+      )}
+
+      {/* Visit flags */}
+      {(checklist?.visitInformation) && (
+        <div className="flex gap-2 flex-wrap">
+          {checklist.visitInformation.newPatient && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">New Patient</span>}
+          {checklist.visitInformation.followUp && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">Follow-up</span>}
+          {checklist.visitInformation.annualPhysical && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">Annual Physical</span>}
+          {checklist.visitInformation.urgentVisit && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">Urgent Visit</span>}
+          {checklist.visitInformation.telehealth && <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">Telehealth</span>}
+        </div>
+      )}
+
+      {(checklist?.reasonForVisit || d?.changesMade || d?.reasonForVisit) && (
+        <div>
+          <p className="text-xs text-gray-500">Reason for visit</p>
+          <p className="text-sm text-gray-700">{checklist?.reasonForVisit ?? d?.changesMade ?? d?.reasonForVisit}</p>
+        </div>
+      )}
+
+      {(checklist?.chiefComplaint || d?.chiefComplaint) && (
+        <div>
+          <p className="text-xs text-gray-500">Chief complaint</p>
+          <p className="text-sm text-gray-700">{checklist?.chiefComplaint ?? d?.chiefComplaint}</p>
+        </div>
+      )}
+
+      {(checklist?.duration || d?.duration) && (
+        <div className="text-sm text-gray-700">
+          <p className="text-xs text-gray-500">Duration</p>
+          <p>
+            {checklist?.duration?.value ? `${checklist.duration.value} ` : ''}
+            {checklist?.duration?.unit ?? d?.duration}
+          </p>
+        </div>
+      )}
+
+      {(checklist?.severity || d?.severity) && (
+        <div>
+          <p className="text-xs text-gray-500">Severity</p>
+          <p className="text-sm text-gray-700">{checklist?.severity ?? d?.severity}{checklist?.severityNotes ? ` — ${checklist.severityNotes}` : ''}</p>
+        </div>
+      )}
+
+      {((checklist?.symptoms && checklist.symptoms.length > 0) || (d?.symptoms && d.symptoms.length > 0)) && (
+        <div>
+          <p className="text-xs text-gray-500">Symptoms</p>
+          <div className="mt-1 space-y-1">
+            {(checklist?.symptoms ?? d?.symptoms).map((s: any, i: number) => (
+              <div key={i} className="text-sm text-gray-700">
+                <strong>{s.symptom || s.name}</strong>{s.severity ? ` — ${s.severity}/10` : ''}{s.timing ? ` · ${s.timing}` : ''}
+                {s.notes && <div className="text-xs text-gray-500">{s.notes}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(checklist?.vitals || d?.vitals) && (
+        <div>
+          <p className="text-xs text-gray-500">Vitals</p>
+          <div className="grid grid-cols-2 gap-2 text-sm text-gray-700 mt-1">
+            {((checklist?.vitals) ?? d?.vitals)?.bloodPressure && <div>BP: {((checklist?.vitals) ?? d?.vitals).bloodPressure}</div>}
+            {((checklist?.vitals) ?? d?.vitals)?.heartRate !== undefined && <div>HR: {((checklist?.vitals) ?? d?.vitals).heartRate} bpm</div>}
+            {((checklist?.vitals) ?? d?.vitals)?.temperature !== undefined && <div>Temp: {((checklist?.vitals) ?? d?.vitals).temperature} °C</div>}
+            {((checklist?.vitals) ?? d?.vitals)?.respiratoryRate !== undefined && <div>RR: {((checklist?.vitals) ?? d?.vitals).respiratoryRate}</div>}
+            {((checklist?.vitals) ?? d?.vitals)?.spO2 !== undefined && <div>SpO₂: {((checklist?.vitals) ?? d?.vitals).spO2}%</div>}
+            {((checklist?.vitals) ?? d?.vitals)?.weight !== undefined && <div>Weight: {((checklist?.vitals) ?? d?.vitals).weight} kg</div>}
+            {((checklist?.vitals) ?? d?.vitals)?.height !== undefined && <div>Height: {((checklist?.vitals) ?? d?.vitals).height} cm</div>}
+            {((checklist?.vitals) ?? d?.vitals)?.bmi !== undefined && <div>BMI: {((checklist?.vitals) ?? d?.vitals).bmi}</div>}
+          </div>
+          {((checklist?.vitals) ?? d?.vitals)?.notes && <p className="text-xs text-gray-500 mt-1">{((checklist?.vitals) ?? d?.vitals).notes}</p>}
+        </div>
+      )}
+
+      {(assessment) && (
+        <div>
+          <p className="text-xs text-gray-500">Assessment</p>
+          <p className="text-sm text-gray-700">{assessment}</p>
+        </div>
+      )}
+
+      {(top.notes || d?.note || d?.followUpPlan) && (
+        <div>
+          <p className="text-xs text-gray-500">Notes</p>
+          <p className="text-sm text-gray-700">{top.notes ?? d?.note ?? d?.followUpPlan}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function UploadedDocDetailView({ d }: { d: UploadedDocumentDetails }) {
   const statusColor = d.extractionStatus === 'EXTRACTED' ? 'text-green-600' :
     d.extractionStatus === 'FAILED' ? 'text-red-600' : 'text-amber-600';
@@ -240,7 +357,7 @@ function renderDetails(node: TimelineNode) {
     case 'PATIENT_SYMPTOM':   return <SymptomDetailView d={node.details as SymptomDetails} />;
     case 'EMR_RECORD':        return <EMRDetailView d={node.details as EMRDetails} />;
     case 'REQUISITION':       return <RequisitionDetailView d={node.details as RequisitionDetails} />;
-    case 'PHYSICIAN_ENTERED': return <PhysicianEnteredDetailView d={node.details as PhysicianEnteredDetails} />;
+    case 'PHYSICIAN_ENTERED': return <CombinedPhysicianDetailView node={node} />;
     case 'UPLOADED_DOCUMENT': return <UploadedDocDetailView d={node.details as UploadedDocumentDetails} />;
     case 'PATIENT_HISTORY':   return <PatientHistoryDetailView d={node.details as PatientHistoryDetails} />;
     default:                  return null;
