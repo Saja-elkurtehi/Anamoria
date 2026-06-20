@@ -6,5 +6,8 @@
     "frontend": "npm --prefix frontend run dev",
     "backend": "npm --prefix backend run dev",
     "install:all": "npm --prefix frontend install && npm --prefix backend install"
+  },
+  "dependencies": {
+    "openai": "^6.44.0"
   }
 }

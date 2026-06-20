@@ -227,3 +227,223 @@ export interface ReferralPacket {
   includePhysicianNotes: boolean;
   generatedAt: string;
 }
+
+// ─── AI shared output types ───────────────────────────────────────────────────
+
+export interface SourceReference {
+  sourceId: string;
+  sourceType: 'TIMELINE_NODE' | 'DOCUMENT' | 'EMR_RECORD' | 'PHYSICIAN_NOTE' | 'PATIENT_PROFILE';
+  label: string;
+  excerpt?: string;
+  date?: string;
+}
+
+export interface SourceLinkedText {
+  text: string;
+  sourceIds: string[];
+  verificationStatus?: string;
+  confidence?: 'LOW' | 'MEDIUM' | 'HIGH';
+}
+
+export interface RequisitionField {
+  fieldId: string;
+  fieldName?: string;  // actual AcroForm field name from the uploaded PDF
+  label: string;
+  value: string;
+  confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+  sourceIds: string[];
+  needsPhysicianReview: boolean;
+  editable: boolean;
+}
+
+// ─── AI input types (match frontend data shapes) ─────────────────────────────
+
+export interface AIPhysicianNote {
+  noteId: string;
+  physicianName: string;
+  specialty?: string;
+  content: string;
+  noteType?: string;
+  createdAt: string;
+}
+
+export interface AITimelineNode {
+  nodeId: string;
+  type: string;
+  title: string;
+  summary: string;
+  eventDate: string;
+  sourceType: string;
+  verificationStatus: string;
+  confidenceLevel?: string;
+  contributorName?: string;
+  contributorRole?: string;
+  tags: string[];
+  physicianNotes: AIPhysicianNote[];
+}
+
+export interface AIDocument {
+  documentId: string;
+  fileName: string;
+  documentType: string;
+  uploadedBy?: string;
+  uploadedAt: string;
+  documentDate?: string;
+  extractionStatus: string;
+  extractedItems?: Record<string, string[]>;
+}
+
+export interface AIPatientProfile {
+  patientId: string;
+  name: string;
+  age?: number;
+  dateOfBirth?: string;
+  gender?: string;
+  bloodType?: string;
+  conditions: string[];
+  allergies: string[];
+  medications: { name: string; dose: string; frequency: string }[];
+  familyHistory: { relationship: string; conditions: string[] }[];
+  careTeam?: { name: string; specialty: string; clinic: string }[];
+  lastAppointment?: string;
+}
+
+// ─── AI request types ─────────────────────────────────────────────────────────
+
+export interface BriefOptions {
+  timeRange: 'SINCE_LAST_VISIT' | 'LAST_30_DAYS' | 'LAST_6_MONTHS' | 'FULL_TIMELINE' | 'CUSTOM';
+  customStartDate?: string;
+  customEndDate?: string;
+  includeSymptoms: boolean;
+  includeDocuments: boolean;
+  includeEMR: boolean;
+  includePhysicianNotes: boolean;
+  includeMedications: boolean;
+  includeAllergies: boolean;
+  includeFamilyHistory: boolean;
+  outputStyle: 'ULTRA_BRIEF' | 'STANDARD' | 'DETAILED';
+  focusArea: 'GENERAL' | 'RESPIRATORY' | 'DERMATOLOGY' | 'ALLERGIES' | 'MEDICATIONS' | 'CUSTOM';
+  customFocusArea?: string;
+}
+
+export interface VisitBriefRequest {
+  patientId: string;
+  lastVisitDate: string;
+  currentVisitDate: string;
+  patientProfile: AIPatientProfile;
+  timelineNodes: AITimelineNode[];
+  documents: AIDocument[];
+  physicianNotes: AIPhysicianNote[];
+  briefOptions?: BriefOptions;
+}
+
+export type PackageType =
+  | 'LAB_REQUISITION'
+  | 'IMAGING_REQUISITION'
+  | 'SPECIALIST_REFERRAL'
+  | 'GENERAL_HANDOFF';
+
+export interface ReferralPackageRequest {
+  patientId: string;
+  recipientName?: string;
+  recipientSpecialty: string;
+  packageType: PackageType;
+  reasonForRequest: string;
+  dateRange?: { startDate?: string; endDate?: string };
+  includeOptions: {
+    medications: boolean;
+    allergies: boolean;
+    conditions: boolean;
+    symptoms: boolean;
+    familyHistory: boolean;
+    documents: boolean;
+    physicianNotes: boolean;
+  };
+  patientProfile: AIPatientProfile;
+  timelineNodes: AITimelineNode[];
+  documents: AIDocument[];
+  physicianNotes: AIPhysicianNote[];
+}
+
+// Keep backward-compat alias so existing backend code compiles without changes
+export type ReferencePackageRequest = ReferralPackageRequest;
+
+export type RequisitionType = 'LAB' | 'IMAGING' | 'SPECIALIST_REFERRAL' | 'OTHER';
+
+export interface RequisitionDraftRequest {
+  patientId: string;
+  requisitionType: RequisitionType;
+  reasonForRequest: string;
+  requestedService?: string;
+  uploadedTemplate?: { fileName: string; templateType: string };
+  detectedPdfFields?: { fieldName: string; fieldType: string }[];
+  patientProfile: AIPatientProfile;
+  timelineNodes: AITimelineNode[];
+  documents: AIDocument[];
+  physicianNotes: AIPhysicianNote[];
+}
+
+// ─── AI response types ────────────────────────────────────────────────────────
+
+export interface VisitBriefResponse {
+  summary: string;
+  sinceLastVisit: SourceLinkedText[];
+  needsReview: SourceLinkedText[];
+  relevantTimelineNodeIds: string[];
+  suggestedVisitNoteStarter: string;
+  sourceMap: SourceReference[];
+  warnings: string[];
+  generatedAt: string;
+  briefOptions?: BriefOptions;
+}
+
+export interface ReferralPackageResponse {
+  packageId: string;
+  status: 'DRAFT' | 'NEEDS_REVIEW' | 'APPROVED';
+  recipientContext: {
+    recipientName?: string;
+    recipientSpecialty: string;
+    packageType: string;
+    reasonForRequest: string;
+  };
+  relevantMedicalHistory: SourceLinkedText[];
+  currentRelevantSymptoms: SourceLinkedText[];
+  relevantConditions: SourceLinkedText[];
+  relevantMedications: SourceLinkedText[];
+  relevantAllergies: SourceLinkedText[];
+  relevantFamilyHistory: SourceLinkedText[];
+  documentsToInclude: {
+    documentId: string;
+    fileName: string;
+    relevanceReason: string;
+    sourceTimelineNodeIds: string[];
+  }[];
+  timelineSnapshot: {
+    nodeId: string;
+    date: string;
+    title: string;
+    summary: string;
+    sourceType: string;
+    verificationStatus: string;
+  }[];
+  missingOrUnverifiedInfo: SourceLinkedText[];
+  notesForRecipient: string;
+  sourceMap: SourceReference[];
+  warnings: string[];
+  generatedAt: string;
+}
+
+// Keep backward-compat alias
+export type ReferencePackageResponse = ReferralPackageResponse;
+
+export interface RequisitionDraftResponse {
+  requisitionDraftId: string;
+  status: 'DRAFT' | 'NEEDS_REVIEW' | 'APPROVED';
+  formTitle: string;
+  templateFileName?: string;
+  fillMode?: 'ACROFORM' | 'OVERLAY' | 'NOT_FILLABLE' | 'UNKNOWN';
+  filledFields: RequisitionField[];
+  sourceMap: SourceReference[];
+  warnings: string[];
+  generatedAt: string;
+}

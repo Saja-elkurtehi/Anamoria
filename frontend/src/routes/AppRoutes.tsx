@@ -12,6 +12,7 @@ import PatientAccess from '../pages/patient/PatientAccess';
 import PhysicianLayout from '../components/layout/PhysicianLayout';
 import PhysicianList from '../pages/physician/PhysicianList';
 import PhysicianPatientDetail from '../pages/physician/PhysicianPatientDetail';
+import SharedPackagePage from '../pages/SharedPackagePage';
 
 function RequireRole({ role, children }: { role: 'patient' | 'physician'; children: React.ReactNode }) {
   const { state } = useApp();
@@ -58,6 +59,9 @@ export default function AppRoutes() {
           <PhysicianLayout><PhysicianPatientDetail /></PhysicianLayout>
         </RequireRole>
       } />
+
+      {/* Shared package — public, no role required */}
+      <Route path="/share/package/:packageId" element={<SharedPackagePage />} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -7,6 +7,7 @@ import physiciansRouter from './routes/physicians';
 import timelineRouter from './routes/timeline';
 import accessRouter from './routes/access';
 import referralsRouter from './routes/referrals';
+import aiRouter from './routes/ai';
 import { errorHandler, notFound } from './middleware/errorHandler';
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.use('/api/physicians', physiciansRouter);
 app.use('/api/timeline', timelineRouter);
 app.use('/api/access-requests', accessRouter);
 app.use('/api/referrals', referralsRouter);
+app.use('/api/ai', aiRouter);
 
 app.use(notFound);
 app.use(errorHandler);

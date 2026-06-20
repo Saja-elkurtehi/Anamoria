@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, CheckCircle, AlertTriangle, Clock, Pill, Users,
-  Heart, FileText, Stethoscope, AlertCircle, Plus, ChevronRight,
-  Activity, ShieldCheck, XCircle, Eye, ClipboardList,
+  Heart, FileText, AlertCircle, Plus, ChevronRight,
+  Activity, ShieldCheck, ClipboardList, Sparkles,
+  Package, User2, Loader2,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { demoPatient, DEMO_PATIENT_ID, DEMO_PHYSICIAN_ID, LAST_APPOINTMENT } from '../../data/mockData';
@@ -11,9 +12,13 @@ import TimelineView from '../../components/timeline/TimelineView';
 import VerificationBadge from '../../components/shared/VerificationBadge';
 import SourceBadge from '../../components/shared/SourceBadge';
 import VisitFormModal from '../../components/physician/VisitFormModal';
+import AIBriefTab from '../../components/physician/AIBriefTab';
+import ReferencePackageTab from '../../components/physician/ReferencePackageTab';
+import RequisitionDraftTab from '../../components/physician/RequisitionDraftTab';
+import PatientProfileTab from '../../components/physician/PatientProfileTab';
 import type { TimelineNode, SymptomDetails } from '../../types';
 
-type TabKey = 'overview' | 'timeline' | 'documents' | 'visit_notes';
+type TabKey = 'overview' | 'timeline' | 'documents' | 'visit_notes' | 'ai_brief' | 'referral_package' | 'requisition' | 'profile';
 
 // ─── Patient header ───────────────────────────────────────────────────────────
 
@@ -475,11 +480,30 @@ function VisitNotesTab() {
 
 // ─── Documents tab ────────────────────────────────────────────────────────────
 
+const MOCK_EXTRACTIONS: Record<string, { findings: string[]; medications?: string[]; doctors: string[]; followUp: string[] }> = {
+  default: {
+    findings: ['Relevant clinical findings extracted from document', 'Additional lab or diagnostic values noted'],
+    medications: ['Current medications identified in document'],
+    doctors: ['Referring/ordering physician identified'],
+    followUp: ['Follow-up recommendations extracted'],
+  },
+};
+
 function DocumentsTab() {
   const { state } = useApp();
+  const [extractionState, setExtractionState] = useState<Record<string, 'idle' | 'extracting' | 'done'>>({});
+  const [includeInReferral, setIncludeInReferral] = useState<Record<string, boolean>>({});
+
+  function handleExtract(docId: string) {
+    setExtractionState(s => ({ ...s, [docId]: 'extracting' }));
+    setTimeout(() => {
+      setExtractionState(s => ({ ...s, [docId]: 'done' }));
+    }, 1500);
+  }
+
   const statusConfig = {
     EXTRACTED: { label: 'Extracted', classes: 'bg-green-100 text-green-700' },
-    PENDING: { label: 'Processing', classes: 'bg-amber-100 text-amber-700' },
+    PENDING: { label: 'Pending', classes: 'bg-amber-100 text-amber-700' },
     NEEDS_REVIEW: { label: 'Needs review', classes: 'bg-amber-100 text-amber-700' },
     FAILED: { label: 'Failed', classes: 'bg-red-100 text-red-600' },
   };
@@ -489,21 +513,33 @@ function DocumentsTab() {
       <h3 className="text-sm font-semibold text-gray-700 mb-4">
         Patient documents <span className="text-gray-400 font-normal">({state.documents.length})</span>
       </h3>
-      <div className="grid gap-3">
+      <div className="grid gap-4">
         {state.documents.map(doc => {
           const sc = statusConfig[doc.extractionStatus];
+          const exState = extractionState[doc.documentId] ?? 'idle';
+          const isExtracted = doc.extractionStatus === 'EXTRACTED' || exState === 'done';
+          const mockExtract = MOCK_EXTRACTIONS.default;
+          const includedInReferral = includeInReferral[doc.documentId] ?? false;
+
           return (
-            <div key={doc.documentId} className="bg-white border border-gray-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
+            <div key={doc.documentId} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+              <div className="p-4 flex items-start gap-3">
                 <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
                   <FileText className="w-4 h-4 text-blue-500" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-semibold text-gray-900 truncate">{doc.fileName}</p>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${sc.classes}`}>
-                      {sc.label}
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      isExtracted ? 'bg-green-100 text-green-700' : sc.classes
+                    }`}>
+                      {isExtracted ? 'Extracted' : sc.label}
                     </span>
+                    {includedInReferral && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-teal-100 text-teal-700">
+                        In referral
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {doc.documentType} · Uploaded by {doc.uploadedBy}
@@ -511,22 +547,64 @@ function DocumentsTab() {
                   {doc.documentDate && (
                     <p className="text-xs text-gray-400">Document date: {doc.documentDate}</p>
                   )}
-                  {doc.extractedItems && (
-                    <div className="mt-2 space-y-1">
-                      {Object.entries(doc.extractedItems).map(([k, vals]) =>
-                        vals && vals.length > 0 ? (
-                          <div key={k} className="flex flex-wrap gap-1">
-                            <span className="text-xs text-gray-400 mr-1 capitalize">{k}:</span>
-                            {vals.slice(0, 3).map((v, i) => (
-                              <span key={i} className="bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded-full">{v}</span>
-                            ))}
-                          </div>
-                        ) : null
-                      )}
-                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {!isExtracted && exState !== 'extracting' && (
+                    <button
+                      onClick={() => handleExtract(doc.documentId)}
+                      className="text-xs font-semibold text-blue-600 border border-blue-200 rounded-lg px-2.5 py-1.5 hover:bg-blue-50 transition-colors"
+                    >
+                      Extract Info
+                    </button>
+                  )}
+                  {exState === 'extracting' && (
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Extracting…
+                    </span>
                   )}
                 </div>
               </div>
+
+              {/* Extracted fields */}
+              {isExtracted && (
+                <div className="border-t border-gray-100 px-4 py-3 bg-gray-50 space-y-3">
+                  {Object.entries(doc.extractedItems ?? mockExtract).map(([k, vals]) =>
+                    vals && vals.length > 0 ? (
+                      <div key={k}>
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 capitalize">{k}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {vals.slice(0, 4).map((v, i) => (
+                            <span key={i} className="bg-white border border-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full shadow-sm">{v}</span>
+                          ))}
+                          {vals.length > 4 && <span className="text-xs text-gray-400">+{vals.length - 4} more</span>}
+                        </div>
+                      </div>
+                    ) : null
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
+                    <div className="flex items-center gap-3">
+                      <button className="text-xs text-violet-600 border border-violet-200 rounded-lg px-2.5 py-1.5 hover:bg-violet-50 transition-colors font-medium">
+                        Create Timeline Node
+                      </button>
+                      <button className="text-xs text-gray-600 border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-gray-100 transition-colors font-medium">
+                        Link to Existing
+                      </button>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={includedInReferral}
+                        onChange={e => setIncludeInReferral(s => ({ ...s, [doc.documentId]: e.target.checked }))}
+                        className="w-3.5 h-3.5 accent-teal-600"
+                      />
+                      <span className="text-xs text-gray-700 font-medium">Include in referral package</span>
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
@@ -563,11 +641,15 @@ export default function PhysicianPatientDetail() {
     );
   }
 
-  const tabs: { key: TabKey; label: string }[] = [
-    { key: 'overview', label: 'Overview' },
-    { key: 'timeline', label: 'Timeline' },
-    { key: 'documents', label: 'Documents' },
-    { key: 'visit_notes', label: 'Visit notes' },
+  const tabs: { key: TabKey; label: string; icon?: React.ReactNode }[] = [
+    { key: 'overview',        label: 'Overview' },
+    { key: 'profile',         label: 'Patient Profile', icon: <User2 className="w-3.5 h-3.5" /> },
+    { key: 'timeline',        label: 'Timeline' },
+    { key: 'documents',       label: 'Documents' },
+    { key: 'visit_notes',     label: 'Visit notes' },
+    { key: 'ai_brief',        label: 'AI Brief',          icon: <Sparkles className="w-3.5 h-3.5" /> },
+    { key: 'referral_package',label: 'Referral Package',  icon: <Package className="w-3.5 h-3.5" /> },
+    { key: 'requisition',     label: 'Requisition',       icon: <ClipboardList className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -581,12 +663,13 @@ export default function PhysicianPatientDetail() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.key
                   ? 'border-teal-600 text-teal-700'
                   : 'border-transparent text-gray-500 hover:text-gray-800'
               }`}
             >
+              {tab.icon}
               {tab.label}
             </button>
           ))}
@@ -645,6 +728,39 @@ export default function PhysicianPatientDetail() {
         {/* ── Visit notes tab ───────────────────────────────────────────────── */}
         {activeTab === 'visit_notes' && (
           <VisitNotesTab />
+        )}
+
+        {/* ── AI Brief tab ──────────────────────────────────────────────────── */}
+        {activeTab === 'ai_brief' && (
+          <AIBriefTab
+            patientProfile={demoPatient}
+            timelineNodes={patientNodes}
+            documents={state.documents}
+            lastVisitDate={LAST_APPOINTMENT}
+          />
+        )}
+
+        {/* ── Patient Profile tab ───────────────────────────────────────────── */}
+        {activeTab === 'profile' && (
+          <PatientProfileTab />
+        )}
+
+        {/* ── Referral Package tab ──────────────────────────────────────────── */}
+        {activeTab === 'referral_package' && (
+          <ReferencePackageTab
+            patientProfile={demoPatient}
+            timelineNodes={patientNodes}
+            documents={state.documents}
+          />
+        )}
+
+        {/* ── Requisition tab ───────────────────────────────────────────────── */}
+        {activeTab === 'requisition' && (
+          <RequisitionDraftTab
+            patientProfile={demoPatient}
+            timelineNodes={patientNodes}
+            documents={state.documents}
+          />
         )}
       </div>
 
