@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New patient intake form</title>
+<style>
+  :root {
+    --ink: #1c2b2b;
+    --ink-soft: #5a6b6b;
+    --line: #d9e0dd;
+    --bg: #f3f1ea;
+    --card: #ffffff;
+    --accent: #2f6f5e;
+    --accent-soft: #e4efe9;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    padding: 32px 16px 80px;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; }
+  header.page {
+    margin-bottom: 28px;
+  }
+  header.page h1 {
+    font-size: 26px;
+    margin: 0 0 6px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  header.page p { margin: 0; color: var(--ink-soft); font-size: 14px; }
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-bottom: 18px;
+  }
+  section.card > h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin: 0 0 4px;
+    font-weight: 600;
+  }
+  section.card > .section-desc {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+  }
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  .field > label.q {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .req { color: #b4443a; margin-left: 2px; }
+  input[type="text"], input[type="tel"], textarea {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 11px;
+    font: inherit;
+    color: var(--ink);
+    background: #fcfcfa;
+  }
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  .measure-wrap {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fcfcfa;
+    overflow: hidden;
+  }
+  .measure-wrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .measure-wrap input {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    flex: 1;
+    min-width: 0;
+  }
+  .measure-wrap input:focus { box-shadow: none; }
+  .unit-toggle { display: flex; border-left: 1px solid var(--line); }
+  .unit-toggle button {
+    border: none;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    padding: 0 14px;
+    cursor: pointer;
+    color: var(--ink-soft);
+  }
+  .unit-toggle button.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .opts { display: flex; flex-direction: column; gap: 7px; }
+  .opts.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 7px 16px;
+  }
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .opt input { margin-top: 3px; flex-shrink: 0; accent-color: var(--accent); }
+  .followup {
+    margin-top: 12px;
+    margin-left: 4px;
+    padding-left: 16px;
+    border-left: 2px solid var(--accent-soft);
+  }
+  .inline-radios { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  .med-item {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: #fcfcfa;
+  }
+  .med-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .med-grid label { font-size: 12px; color: var(--ink-soft); display: block; margin-bottom: 3px; }
+  .btn {
+    font: inherit;
+    font-size: 13px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .btn:hover { background: var(--accent-soft); }
+  .btn-remove { color: #b4443a; border: none; background: none; font-size: 13px; cursor: pointer; padding: 0; margin-top: 8px; }
+  .actions { margin-top: 24px; display: flex; gap: 12px; align-items: center; }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 11px 22px;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 15px;
+  }
+  .btn-primary:hover { background: #265a4c; }
+  #output {
+    margin-top: 20px;
+    background: #11201d;
+    color: #c8e6d8;
+    padding: 16px;
+    border-radius: 8px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    display: none;
+  }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <h1 id="form-title"></h1>
+    <p id="form-desc"></p>
+  </header>
+  <form id="intake"></form>
+  <div class="actions">
+    <button type="button" class="btn-primary" onclick="showAnswers()">Review answers</button>
+    <span style="font-size:13px;color:var(--ink-soft)">Nothing is sent anywhere — this is a local preview.</span>
+  </div>
+  <pre id="output"></pre>
+</div>
+
+<script>
+const SCHEMA = {"formId": "patient-intake", "version": "2.0", "title": "New patient intake form", "description": "Typed fields accept free text. Unless noted, options are checkboxes. Indented follow-up questions appear based on your answer.", "frequencyOptions": [{"value": "monthly", "label": "Monthly"}, {"value": "weekly", "label": "Weekly"}, {"value": "daily", "label": "Daily"}], "sections": [{"id": "personal", "title": "Personal details", "fields": [{"id": "full_name", "label": "Name", "type": "text", "required": true}, {"id": "date_of_birth", "label": "Date of birth (YYYY/MM/DD)", "type": "text", "placeholder": "YYYY/MM/DD", "required": true}, {"id": "sex", "label": "Sex", "type": "radio", "options": [{"value": "f", "label": "F"}, {"value": "m", "label": "M"}]}, {"id": "height", "label": "Height (cm)", "type": "text"}, {"id": "weight", "label": "Weight", "type": "measure_with_unit", "unitField": "weight_unit", "units": [{"value": "kg", "label": "Kg"}, {"value": "lbs", "label": "lbs"}]}, {"id": "blood_type", "label": "Blood type", "type": "text", "placeholder": "e.g. O+"}, {"id": "occupation", "label": "Occupation", "type": "text"}, {"id": "phone_number", "label": "Phone number", "type": "tel"}, {"id": "address", "label": "Address", "type": "text"}]}, {"id": "emergency_contact", "title": "Emergency contact", "fields": [{"id": "ec_name", "label": "Name", "type": "text"}, {"id": "ec_relationship", "label": "Relationship", "type": "text"}, {"id": "ec_phone", "label": "Phone number", "type": "tel"}]}, {"id": "medical_history", "title": "Past medical history", "fields": [{"id": "conditions", "label": "Check any that apply", "type": "checkbox_group", "exclusiveOption": "none", "options": [{"value": "none", "label": "No known medical conditions"}, {"value": "anemia", "label": "Anemia"}, {"value": "anxiety", "label": "Anxiety"}, {"value": "arthritis", "label": "Arthritis"}, {"value": "blood_transfusion", "label": "Blood transfusion"}, {"value": "high_blood_pressure", "label": "High blood pressure"}, {"value": "heart_condition", "label": "Heart condition"}, {"value": "stroke", "label": "Stroke"}, {"value": "asthma", "label": "Asthma"}, {"value": "osteoarthritis", "label": "Osteoarthritis"}, {"value": "lupus", "label": "Lupus"}, {"value": "pacemaker", "label": "Pacemaker"}, {"value": "seizures", "label": "Seizures"}, {"value": "cancer", "label": "Cancer"}, {"value": "diabetes", "label": "Diabetes"}, {"value": "hiv_aids", "label": "HIV or AIDS"}, {"value": "fibromyalgia", "label": "Fibromyalgia"}, {"value": "epilepsy", "label": "Epilepsy / Seizures"}, {"value": "glaucoma", "label": "Glaucoma"}, {"value": "gout", "label": "Gout"}, {"value": "high_cholesterol", "label": "High cholesterol"}, {"value": "kidney_disease", "label": "Kidney disease / Kidney stones"}, {"value": "liver_disease", "label": "Liver disease / Hepatitis"}, {"value": "migraines", "label": "Migraines"}, {"value": "osteoporosis", "label": "Osteoporosis"}, {"value": "thyroid_disease", "label": "Thyroid disease"}, {"value": "tuberculosis", "label": "Tuberculosis"}]}, {"id": "conditions_other", "label": "Other", "type": "text"}]}, {"id": "tests", "title": "Previous medical tests", "fields": [{"id": "recent_tests", "label": "Check any that apply", "type": "checkbox_group", "options": [{"value": "ct", "label": "CAT scan"}, {"value": "emg", "label": "EMG"}, {"value": "ekg", "label": "EKG"}, {"value": "mri", "label": "MRI"}, {"value": "xray", "label": "X-ray"}]}, {"id": "tests_other", "label": "Other", "type": "text"}]}, {"id": "surgeries", "title": "Previous surgeries", "fields": [{"id": "surgeries_detail", "label": "Previous surgeries", "type": "textarea"}]}, {"id": "medications", "title": "Medication", "fields": [{"id": "current_medications", "label": "Current", "type": "repeatable_group", "itemLabel": "Medication", "fields": [{"id": "name", "label": "Medication", "type": "text"}, {"id": "dose", "label": "Dose", "type": "text"}, {"id": "frequency", "label": "Frequency", "type": "text"}]}, {"id": "previous_medications", "label": "Previous", "type": "repeatable_group", "itemLabel": "Medication", "fields": [{"id": "name", "label": "Medication", "type": "text"}, {"id": "dose", "label": "Dose", "type": "text"}, {"id": "frequency", "label": "Frequency", "type": "text"}]}]}, {"id": "allergies", "title": "Allergies", "fields": [{"id": "allergies_detail", "label": "Allergies", "type": "textarea"}]}, {"id": "family_history", "title": "Family history", "fields": [{"id": "family_conditions", "label": "Check any that apply", "type": "checkbox_group", "exclusiveOption": "none", "options": [{"value": "none", "label": "No known family history of medical conditions"}, {"value": "cancer", "label": "Cancer"}, {"value": "diabetes", "label": "Diabetes"}, {"value": "heart_disease", "label": "Heart disease"}, {"value": "high_blood_pressure", "label": "High blood pressure"}, {"value": "high_cholesterol", "label": "High cholesterol"}, {"value": "stroke", "label": "Stroke"}, {"value": "thyroid_disease", "label": "Thyroid disease"}, {"value": "kidney_disease", "label": "Kidney disease"}, {"value": "mental_health", "label": "Mental health conditions (depression, anxiety, etc.)"}, {"value": "autoimmune", "label": "Autoimmune diseases"}]}, {"id": "family_conditions_other", "label": "Other", "type": "text"}]}, {"id": "lifestyle", "title": "Lifestyle", "fields": [{"id": "smokes", "label": "Do you smoke?", "type": "radio", "options": [{"value": "no", "label": "No"}, {"value": "yes", "label": "Yes"}]}, {"id": "smoke_frequency", "label": "How often?", "type": "radio", "optionsRef": "frequencyOptions", "showIf": {"field": "smokes", "equals": "yes"}}, {"id": "alcohol", "label": "Do you consume alcohol?", "type": "radio", "options": [{"value": "no", "label": "No"}, {"value": "yes", "label": "Yes"}]}, {"id": "alcohol_frequency", "label": "How often?", "type": "radio", "optionsRef": "frequencyOptions", "showIf": {"field": "alcohol", "equals": "yes"}}, {"id": "marijuana", "label": "Do you consume marijuana?", "type": "radio", "options": [{"value": "no", "label": "No"}, {"value": "yes", "label": "Yes"}]}, {"id": "marijuana_frequency", "label": "How often?", "type": "radio", "optionsRef": "frequencyOptions", "showIf": {"field": "marijuana", "equals": "yes"}}, {"id": "recreational_drugs", "label": "Do you use recreational/illicit drugs?", "type": "radio", "options": [{"value": "no", "label": "No"}, {"value": "yes", "label": "Yes"}]}, {"id": "recreational_frequency", "label": "How often?", "type": "radio", "optionsRef": "frequencyOptions", "showIf": {"field": "recreational_drugs", "equals": "yes"}}]}, {"id": "reproductive", "title": "Reproductive & sexual health", "fields": [{"id": "currently_pregnant", "label": "Are you currently pregnant?", "type": "radio", "options": [{"value": "yes", "label": "Yes"}, {"value": "no", "label": "No"}]}, {"id": "past_pregnancies", "label": "Past pregnancies?", "type": "radio", "options": [{"value": "yes", "label": "Yes"}, {"value": "no", "label": "No"}]}, {"id": "past_pregnancies_dates", "label": "Dates", "type": "textarea", "showIf": {"field": "past_pregnancies", "equals": "yes"}}, {"id": "sexually_active", "label": "Are you sexually active?", "type": "radio", "options": [{"value": "yes", "label": "Yes"}, {"value": "no", "label": "No"}]}, {"id": "unprotected_sex", "label": "Have you had unprotected sex?", "type": "radio", "options": [{"value": "yes", "label": "Yes"}, {"value": "no", "label": "No"}], "showIf": {"field": "sexually_active", "equals": "yes"}}]}, {"id": "immunization", "title": "Immunization status", "description": "Check vaccines you have received. Select 'Unsure' if you don't know. Dated fields help us know if a booster is due.", "fields": [{"id": "vaccines", "label": "Vaccines received", "type": "checkbox_group", "exclusiveOption": "unsure_all", "options": [{"value": "tetanus_tdap", "label": "Tetanus / diphtheria / pertussis (Td or Tdap)"}, {"value": "influenza", "label": "Influenza (annual flu shot)"}, {"value": "covid19", "label": "COVID-19"}, {"value": "mmr", "label": "MMR (measles, mumps, rubella)"}, {"value": "varicella", "label": "Varicella (chickenpox)"}, {"value": "hepatitis_a", "label": "Hepatitis A"}, {"value": "hepatitis_b", "label": "Hepatitis B"}, {"value": "hpv", "label": "HPV"}, {"value": "pneumococcal", "label": "Pneumococcal (pneumonia)"}, {"value": "shingles", "label": "Shingles (Shingrix)"}, {"value": "meningococcal", "label": "Meningococcal"}, {"value": "rsv", "label": "RSV"}, {"value": "polio", "label": "Polio (IPV)"}, {"value": "unsure_all", "label": "Unsure / I don't know my vaccination history"}]}, {"id": "last_tetanus_date", "label": "Date of last tetanus booster (YYYY/MM/DD)", "type": "text", "placeholder": "YYYY/MM/DD"}, {"id": "last_flu_date", "label": "Date of last flu shot (YYYY/MM/DD)", "type": "text", "placeholder": "YYYY/MM/DD"}, {"id": "last_covid_date", "label": "Date of last COVID-19 dose (YYYY/MM/DD)", "type": "text", "placeholder": "YYYY/MM/DD"}, {"id": "vaccine_reaction", "label": "Have you ever had a reaction to a vaccine?", "type": "radio", "options": [{"value": "no", "label": "No"}, {"value": "yes", "label": "Yes"}]}, {"id": "vaccine_reaction_detail", "label": "Please describe the reaction", "type": "textarea", "showIf": {"field": "vaccine_reaction", "equals": "yes"}}, {"id": "vaccine_records_available", "label": "Can you provide vaccination records?", "type": "radio", "options": [{"value": "yes", "label": "Yes"}, {"value": "no", "label": "No"}]}, {"id": "vaccine_notes", "label": "Other immunization notes", "type": "textarea"}]}]};
+const answers = {};
+
+function resolveOptions(field) {
+  if (field.optionsRef) return SCHEMA[field.optionsRef];
+  return field.options || [];
+}
+
+function el(tag, attrs, children) {
+  const n = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === 'class') n.className = attrs[k];
+    else if (k === 'html') n.innerHTML = attrs[k];
+    else n.setAttribute(k, attrs[k]);
+  }
+  (children || []).forEach(c => n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c));
+  return n;
+}
+
+function visible(field) {
+  if (!field.showIf) return true;
+  return answers[field.showIf.field] === field.showIf.equals;
+}
+
+function rerender() {
+  const form = document.getElementById('intake');
+  form.innerHTML = '';
+  SCHEMA.sections.forEach(section => {
+    const card = el('section', { class: 'card' });
+    card.appendChild(el('h2', {}, [section.title]));
+    if (section.description) card.appendChild(el('p', { class: 'section-desc' }, [section.description]));
+    section.fields.forEach(field => {
+      if (!visible(field)) return;
+      card.appendChild(renderField(field));
+    });
+    form.appendChild(card);
+  });
+}
+
+function renderField(field) {
+  const wrap = el('div', { class: 'field' + (field.showIf ? ' followup' : '') });
+  const labelText = field.label + (field.required ? ' *' : '');
+
+  if (field.type === 'text' || field.type === 'tel') {
+    wrap.appendChild(el('label', { class: 'q', html: labelText.replace(' *', ' <span class=req>*</span>') }));
+    const inp = el('input', { type: field.type === 'tel' ? 'tel' : 'text' });
+    if (field.placeholder) inp.placeholder = field.placeholder;
+    inp.value = answers[field.id] || '';
+    inp.oninput = e => { answers[field.id] = e.target.value; };
+    wrap.appendChild(inp);
+    return wrap;
+  }
+
+  if (field.type === 'textarea') {
+    wrap.appendChild(el('label', { class: 'q' }, [labelText]));
+    const ta = el('textarea');
+    ta.value = answers[field.id] || '';
+    ta.oninput = e => { answers[field.id] = e.target.value; };
+    wrap.appendChild(ta);
+    return wrap;
+  }
+
+  if (field.type === 'radio') {
+    wrap.appendChild(el('label', { class: 'q', html: labelText.replace(' *', ' <span class=req>*</span>') }));
+    const box = el('div', { class: 'inline-radios' });
+    resolveOptions(field).forEach(opt => {
+      const id = field.id + '_' + opt.value;
+      const r = el('input', { type: 'radio', name: field.id, id });
+      if (answers[field.id] === opt.value) r.checked = true;
+      r.onchange = () => { answers[field.id] = opt.value; rerender(); };
+      box.appendChild(el('label', { class: 'opt', for: id }, [r, opt.label]));
+    });
+    wrap.appendChild(box);
+    return wrap;
+  }
+
+  if (field.type === 'checkbox_group') {
+    wrap.appendChild(el('label', { class: 'q' }, [field.label]));
+    if (!Array.isArray(answers[field.id])) answers[field.id] = [];
+    const box = el('div', { class: 'opts grid' });
+    const opts = resolveOptions(field);
+    opts.forEach(opt => {
+      const id = field.id + '_' + opt.value;
+      const c = el('input', { type: 'checkbox', id });
+      c.checked = answers[field.id].includes(opt.value);
+      c.onchange = () => {
+        const ex = field.exclusiveOption;
+        if (c.checked) {
+          if (ex && opt.value === ex) answers[field.id] = [ex];
+          else {
+            answers[field.id] = answers[field.id].filter(v => v !== ex);
+            answers[field.id].push(opt.value);
+          }
+        } else {
+          answers[field.id] = answers[field.id].filter(v => v !== opt.value);
+        }
+        rerender();
+      };
+      box.appendChild(el('label', { class: 'opt', for: id }, [c, opt.label]));
+    });
+    wrap.appendChild(box);
+    return wrap;
+  }
+
+  if (field.type === 'repeatable_group') {
+    wrap.appendChild(el('label', { class: 'q' }, [field.label]));
+    if (!Array.isArray(answers[field.id])) answers[field.id] = [];
+    const list = el('div');
+    answers[field.id].forEach((row, i) => {
+      const item = el('div', { class: 'med-item' });
+      const grid = el('div', { class: 'med-grid' });
+      field.fields.forEach(sub => {
+        const cell = el('div');
+        cell.appendChild(el('label', {}, [sub.label]));
+        const inp = el('input', { type: 'text' });
+        inp.value = row[sub.id] || '';
+        inp.oninput = e => { answers[field.id][i][sub.id] = e.target.value; };
+        cell.appendChild(inp);
+        grid.appendChild(cell);
+      });
+      item.appendChild(grid);
+      const rm = el('button', { type: 'button', class: 'btn-remove' }, ['Remove']);
+      rm.onclick = () => { answers[field.id].splice(i, 1); rerender(); };
+      item.appendChild(rm);
+      list.appendChild(item);
+    });
+    wrap.appendChild(list);
+    const add = el('button', { type: 'button', class: 'btn' }, ['+ Add ' + (field.itemLabel || 'item').toLowerCase()]);
+    add.onclick = () => { answers[field.id].push({}); rerender(); };
+    wrap.appendChild(add);
+    return wrap;
+  }
+
+  if (field.type === 'measure_with_unit') {
+    wrap.appendChild(el('label', { class: 'q' }, [field.label]));
+    const box = el('div', { class: 'measure-wrap' });
+    const inp = el('input', { type: 'text' });
+    inp.value = answers[field.id] || '';
+    inp.oninput = e => { answers[field.id] = e.target.value; };
+    box.appendChild(inp);
+    const toggle = el('div', { class: 'unit-toggle' });
+    if (!answers[field.unitField]) answers[field.unitField] = field.units[0].value;
+    field.units.forEach(u => {
+      const b = el('button', { type: 'button' }, [u.label]);
+      if (answers[field.unitField] === u.value) b.className = 'active';
+      b.onclick = () => { answers[field.unitField] = u.value; rerender(); };
+      toggle.appendChild(b);
+    });
+    box.appendChild(toggle);
+    wrap.appendChild(box);
+    return wrap;
+  }
+
+  return wrap;
+}
+
+function showAnswers() {
+  const out = document.getElementById('output');
+  out.style.display = 'block';
+  out.textContent = JSON.stringify(answers, null, 2);
+  out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+document.getElementById('form-title').textContent = SCHEMA.title;
+document.getElementById('form-desc').textContent = SCHEMA.description;
+rerender();
+</script>
+</body>
+</html>
