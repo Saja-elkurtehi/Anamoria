@@ -7,7 +7,7 @@ interface SourceBadgeProps {
 }
 
 export function getSourceConfig(sourceType: DataSource, verificationStatus: VerificationStatus) {
-  if (sourceType === 'PHYSICIAN_EDIT') {
+  if (sourceType === 'PHYSICIAN') {
     return {
       label: 'Physician',
       colorClass: 'bg-violet-50 text-violet-700 border-violet-200',
@@ -17,9 +17,9 @@ export function getSourceConfig(sourceType: DataSource, verificationStatus: Veri
       ringClass: 'ring-violet-400',
     };
   }
-  if (sourceType === 'EMR_INGEST' || verificationStatus === 'CONFIRMED_BY_EMR') {
+  if (sourceType === 'EMR' || verificationStatus === 'CONFIRMED_BY_EMR') {
     return {
-      label: sourceType === 'EMR_INGEST' ? 'EMR Record' : 'EMR Confirmed',
+      label: sourceType === 'EMR' ? 'EMR Record' : 'EMR Confirmed',
       colorClass: 'bg-blue-50 text-blue-700 border-blue-200',
       dotClass: 'bg-blue-400',
       borderClass: 'border-l-blue-400',
@@ -47,10 +47,7 @@ export function getSourceConfig(sourceType: DataSource, verificationStatus: Veri
       ringClass: 'ring-blue-400',
     };
   }
-  if (
-    verificationStatus === 'PHYSICIAN_VERIFIED' &&
-    (sourceType === 'INTAKE_FORM' || sourceType === 'PROFILE' || sourceType === 'CHAT_ASSISTANT')
-  ) {
+  if (verificationStatus === 'PHYSICIAN_VERIFIED' && (sourceType === 'INTAKE_FORM' || sourceType === 'PROFILE' || sourceType === 'CHAT_ASSISTANT')) {
     return {
       label: 'Patient · Verified',
       colorClass: 'bg-green-50 text-green-700 border-green-200',

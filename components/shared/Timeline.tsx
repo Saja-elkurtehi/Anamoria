@@ -27,12 +27,12 @@ export default function Timeline({ showFilters = false }: TimelineProps) {
     else grouped.push({ year, nodes: [node] });
   }
 
-  const sources: DataSource[] = ['UPLOAD', 'INTAKE_FORM', 'CHAT_ASSISTANT', 'PROFILE', 'EMR_INGEST', 'PHYSICIAN_EDIT'];
+  const sources: DataSource[] = ['UPLOAD', 'PROFILE', 'INTAKE_FORM', 'CHAT_ASSISTANT', 'PHYSICIAN', 'EMR'];
   const statuses: VerificationStatus[] = ['PHYSICIAN_VERIFIED', 'CONFIRMED_BY_EMR', 'PATIENT_REPORTED', 'NEEDS_REVIEW', 'FLAGGED', 'CLARIFICATION_REQUESTED'];
 
   const sourceLabels: Record<DataSource, string> = {
-    UPLOAD: 'Uploaded Document', INTAKE_FORM: 'Intake Form', CHAT_ASSISTANT: 'Chat Assistant',
-    PROFILE: 'Patient Profile', EMR_INGEST: 'External EMR', PHYSICIAN_EDIT: 'Physician',
+    UPLOAD: 'Uploaded Document', PROFILE: 'Patient Profile', INTAKE_FORM: 'Intake Form', CHAT_ASSISTANT: 'Chat Assistant',
+    PHYSICIAN: 'Physician', EMR: 'External EMR',
   };
   const statusLabels: Record<VerificationStatus, string> = {
     PHYSICIAN_VERIFIED: 'Physician Verified', CONFIRMED_BY_EMR: 'EMR Confirmed',
