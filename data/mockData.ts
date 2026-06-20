@@ -172,7 +172,7 @@ export const mockPatient: Patient = {
     {
       name: 'IgE Total Serum',
       date: 'January 8, 2024',
-      result: '310 IU/mL (ref: < 100). Significantly elevated. Consistent with atopic profile.',
+      result: '310 IU/mL (ref: < 100). Significantly elevated.',
       facility: 'LifeLabs',
       flagged: true,
     },
@@ -337,7 +337,9 @@ export const initialTimelineNodes: TimelineNode[] = [
     summary: 'Emergency appendectomy at Sick Kids Hospital. Uncomplicated recovery.',
     details:
       'Layla presented with acute right lower quadrant pain and was taken to surgery. Laparoscopic appendectomy performed by Dr. James Morton. No complications. Discharged after 3 days with standard post-operative instructions.',
-    sourceType: 'EMR_INGEST',
+    sourceType: 'EMR',
+    physicianName: '',
+    physicianClinic: undefined,
     contributorId: 'sys-001',
     contributorName: 'Sick Kids Hospital EMR',
     contributorRole: 'SYSTEM',
@@ -347,6 +349,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'PROCEDURE',
     tags: ['surgery', 'appendix', 'pediatric'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-002',
@@ -357,6 +360,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     details:
       "Layla reported that her mother has had asthma since childhood and uses an inhaler regularly. Maternal grandmother also has a history of asthma. This family history was noted during intake and has not yet been independently verified against medical records.",
     sourceType: 'INTAKE_FORM',
+    physicianName: '',
     contributorId: 'pat-001',
     contributorName: 'Layla Hassan',
     contributorRole: 'PATIENT',
@@ -367,6 +371,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     category: 'FAMILY_HISTORY',
     tags: ['family history', 'asthma', 'maternal'],
     missingInfo: ['Exact date of mother\'s diagnosis not recorded', 'No supporting documents'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-003',
@@ -376,7 +381,8 @@ export const initialTimelineNodes: TimelineNode[] = [
     summary: 'Diagnosed with mild-to-moderate asthma by Dr. Omar Benali following recurrent wheeze.',
     details:
       'Layla presented with a 3-month history of intermittent wheeze, nocturnal cough, and breathlessness on exertion. Spirometry confirmed a reversible obstructive pattern. Diagnosed with mild-to-moderate persistent asthma. Family history of maternal asthma noted as relevant. Started on Salbutamol inhaler as rescue therapy.',
-    sourceType: 'EMR_INGEST',
+    sourceType: 'EMR',
+    physicianName: '',
     contributorId: 'sys-002',
     contributorName: 'Riverside Medical Centre EMR',
     contributorRole: 'SYSTEM',
@@ -386,6 +392,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'DIAGNOSIS',
     tags: ['asthma', 'diagnosis', 'respiratory'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-004',
@@ -395,7 +402,8 @@ export const initialTimelineNodes: TimelineNode[] = [
     summary: 'Salbutamol (Ventolin) 100mcg inhaler prescribed as rescue bronchodilator.',
     details:
       'Following asthma diagnosis, Dr. Benali prescribed Salbutamol 100mcg MDI as needed for bronchospasm relief. Patient was counselled on correct inhaler technique and when to seek emergency care. Asthma action plan issued.',
-    sourceType: 'EMR_INGEST',
+    sourceType: 'EMR',
+    physicianName: '',
     contributorId: 'sys-002',
     contributorName: 'Riverside Medical Centre EMR',
     contributorRole: 'SYSTEM',
@@ -405,6 +413,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'MEDICATION',
     tags: ['medication', 'salbutamol', 'inhaler', 'asthma'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-005',
@@ -415,6 +424,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     details:
       'Layla presented to Riverside Medical Walk-in with a 2-day history of worsening breathlessness and wheeze not responding adequately to her rescue inhaler. Chest X-ray showed mild hyperinflation consistent with asthma — no consolidation or effusion. Prescribed a 5-day course of oral prednisolone. Follow-up with GP arranged.',
     sourceType: 'UPLOAD',
+    physicianName: '',
     contributorId: 'pat-001',
     contributorName: 'Layla Hassan (uploaded)',
     contributorRole: 'PATIENT',
@@ -433,6 +443,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     ],
     category: 'VISIT',
     tags: ['asthma', 'exacerbation', 'urgent care', 'steroids'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-006',
@@ -443,6 +454,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     details:
       'Layla was brought to Toronto General Hospital Emergency by ambulance after accidental ingestion of shellfish at a restaurant. She developed throat swelling, generalized urticaria, vomiting, and hypotension within 20 minutes of ingestion. Epinephrine 0.3mg IM administered, followed by IV antihistamines and corticosteroids. Observed for 6 hours and discharged. Two EpiPens prescribed. Strict shellfish avoidance counselled. Allergy clinic referral placed.',
     sourceType: 'UPLOAD',
+    physicianName: '',
     contributorId: 'pat-001',
     contributorName: 'Layla Hassan (uploaded discharge summary)',
     contributorRole: 'PATIENT',
@@ -452,6 +464,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'VISIT',
     tags: ['anaphylaxis', 'shellfish', 'allergy', 'emergency', 'epinephrine'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-007',
@@ -461,7 +474,8 @@ export const initialTimelineNodes: TimelineNode[] = [
     summary: 'Diagnosed with atopic dermatitis by Dr. Sarah Patel, Dermatology. Cetirizine initiated.',
     details:
       'Following months of patient-reported itchy, red patches on arms and behind knees, Layla was referred to dermatology. Dr. Sarah Patel confirmed atopic dermatitis based on clinical examination and atopic history. Cetirizine 10mg once daily started. Topical emollients recommended. Patient noted she had family history of eczema (maternal aunt). Skin prick testing deferred.',
-    sourceType: 'EMR_INGEST',
+    sourceType: 'EMR',
+    physicianName: '',
     contributorId: 'sys-003',
     contributorName: 'Ontario Dermatology Network EMR',
     contributorRole: 'SYSTEM',
@@ -471,6 +485,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'DIAGNOSIS',
     tags: ['eczema', 'atopic dermatitis', 'diagnosis', 'skin'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-008',
@@ -481,6 +496,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     details:
       'Spirometry performed at Riverside Respiratory Clinic. Results showed FEV1/FVC ratio of 0.72 (below lower limit of normal), confirming a mild obstructive ventilatory pattern. Significant post-bronchodilator response noted (+15% FEV1), consistent with asthma. Asthma management reviewed. Step-up therapy considered.',
     sourceType: 'UPLOAD',
+    physicianName: '',
     contributorId: 'pat-001',
     contributorName: 'Layla Hassan (uploaded)',
     contributorRole: 'PATIENT',
@@ -490,6 +506,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'LAB',
     tags: ['spirometry', 'pulmonary function', 'asthma', 'lab'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-009',
@@ -499,7 +516,8 @@ export const initialTimelineNodes: TimelineNode[] = [
     summary: 'Inhaled corticosteroid (Fluticasone 125mcg BID) added for better asthma control.',
     details:
       'Based on spirometry results and frequency of rescue inhaler use (>2 times/week), Dr. Benali stepped up asthma therapy to include an inhaled corticosteroid. Fluticasone Propionate 125mcg BID prescribed. Asthma action plan updated. Patient counselled on importance of daily adherence.',
-    sourceType: 'EMR_INGEST',
+    sourceType: 'EMR',
+    physicianName: '',
     contributorId: 'sys-002',
     contributorName: 'Riverside Medical Centre EMR',
     contributorRole: 'SYSTEM',
@@ -509,6 +527,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'MEDICATION',
     tags: ['fluticasone', 'ICS', 'inhaler', 'step-up', 'asthma'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-010',
@@ -519,6 +538,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     details:
       'Blood work ordered by Dr. Benali. Total serum IgE was markedly elevated at 310 IU/mL (reference: <100 IU/mL), consistent with atopic predisposition. CBC showed mild eosinophilia at 0.6 × 10⁹/L. Results discussed with patient. Allergy skin prick testing and formal allergy clinic referral arranged. No change to current medications at this time.',
     sourceType: 'UPLOAD',
+    physicianName: '',
     contributorId: 'pat-001',
     contributorName: 'Layla Hassan (uploaded lab results)',
     contributorRole: 'PATIENT',
@@ -528,6 +548,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'LAB',
     tags: ['IgE', 'eosinophils', 'allergy', 'lab', 'atopic'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-011',
@@ -538,6 +559,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     details:
       'Dr. Benali referred Layla to Dermatology due to ongoing poorly controlled eczema despite OTC topical hydrocortisone 1%. Referral letter noted: widespread atopic dermatitis involving arms, hands, and behind knees; elevated IgE; family history of eczema (maternal aunt) and asthma (mother, grandmother). Request for formal assessment and management plan.',
     sourceType: 'UPLOAD',
+    physicianName: '',
     contributorId: 'pat-001',
     contributorName: 'Layla Hassan (uploaded referral letter)',
     contributorRole: 'PATIENT',
@@ -547,6 +569,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'REFERRAL',
     tags: ['referral', 'dermatology', 'eczema'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-012',
@@ -557,6 +580,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     details:
       'Skin prick testing performed at Riverside Allergy Clinic. Confirmed strong sensitisation to shellfish. Significant sensitisation to indoor allergens (dust mites) and cat dander, likely contributing to asthma and rhinitis. Environmental control measures recommended. Immunotherapy discussed but deferred. EpiPen prescription renewed.',
     sourceType: 'UPLOAD',
+    physicianName: '',
     contributorId: 'pat-001',
     contributorName: 'Layla Hassan (uploaded)',
     contributorRole: 'PATIENT',
@@ -566,6 +590,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'LAB',
     tags: ['allergy', 'skin prick test', 'shellfish', 'dust mites'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-013',
@@ -575,13 +600,15 @@ export const initialTimelineNodes: TimelineNode[] = [
     summary: 'Dr. Aisha Khan assessed eczema. Mometasone furoate cream 0.1% prescribed.',
     details:
       'First appointment with Dr. Aisha Khan at Riverside Medical Centre. Extensive assessment of atopic dermatitis affecting bilateral hands, antecubital fossae, and popliteal fossae. Mometasone furoate 0.1% cream prescribed BID for 4 weeks, then as needed. Emollient (CeraVe) recommended twice daily. Wet wrap therapy discussed for flare management. Follow-up in 8 weeks.',
-    sourceType: 'PHYSICIAN_EDIT',
+    sourceType: 'PHYSICIAN',
+    physicianName: 'Dr. Aisha Khan',
+    physicianClinic: 'Riverside Medical Centre',
     contributorId: 'phys-001',
     contributorName: 'Dr. Aisha Khan',
     contributorRole: 'PHYSICIAN',
     confidenceLevel: 'HIGH',
     verificationStatus: 'PHYSICIAN_VERIFIED',
-    relatedDocuments: ['doc-003'],
+    relatedDocuments: [],
     physicianNotes: [
       {
         noteId: 'pn-002',
@@ -594,6 +621,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     ],
     category: 'VISIT',
     tags: ['dermatology', 'eczema', 'mometasone', 'visit', 'physician'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-014',
@@ -603,7 +631,8 @@ export const initialTimelineNodes: TimelineNode[] = [
     summary: 'Patient reports worsening breathlessness on exertion since November 2025. Unreviewed.',
     details:
       "Layla entered this symptom via the Anamoria symptom tracker. She reports shortness of breath occurring 3–4 times per week during moderate exercise (jogging, climbing stairs). Each episode lasts 10–15 minutes and resolves with rest. She uses her Salbutamol inhaler but says it only partially helps. Cold air appears to worsen symptoms. She hasn't seen a doctor for this yet.",
-    sourceType: 'PROFILE',
+    sourceType: 'INTAKE_FORM',
+    physicianName: '',
     contributorId: 'pat-001',
     contributorName: 'Layla Hassan (symptom tracker)',
     contributorRole: 'PATIENT',
@@ -618,16 +647,18 @@ export const initialTimelineNodes: TimelineNode[] = [
       'Unclear if current ICS dose is adequate',
       'Peak flow readings not available',
     ],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-015',
     eventDate: '2026-03-04',
     approximateDate: false,
     title: 'Asthma Action Plan uploaded (2023 version)',
-    summary: 'Patient uploaded asthma action plan issued by Dr. Benali in January 2023.',
+    summary: 'Patient uploaded their written Asthma Action Plan from 2023. Document extracted by Anamoria: confirms moderate persistent asthma classification, current medications (Fluticasone 125mcg BID, Salbutamol 100mcg PRN), green/yellow/red zone instructions, and recommendation for annual spirometry review.',
     details:
       'Patient uploaded their written Asthma Action Plan from 2023. Document extracted by Anamoria: confirms moderate persistent asthma classification, current medications (Fluticasone 125mcg BID, Salbutamol 100mcg PRN), green/yellow/red zone instructions, and recommendation for annual spirometry review.',
     sourceType: 'UPLOAD',
+    physicianName: '',
     contributorId: 'pat-001',
     contributorName: 'Layla Hassan (uploaded)',
     contributorRole: 'PATIENT',
@@ -637,6 +668,7 @@ export const initialTimelineNodes: TimelineNode[] = [
     physicianNotes: [],
     category: 'NOTE',
     tags: ['upload', 'asthma action plan', 'document'],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-016',
@@ -646,7 +678,8 @@ export const initialTimelineNodes: TimelineNode[] = [
     summary: 'Patient reports daily eczema flares on hands since March 2026. Prescribed cream providing limited relief.',
     details:
       "Layla added this symptom via the symptom tracker. She reports skin cracking on knuckles and finger joints daily. The mometasone cream is providing less relief than initially. Symptoms worsen in cold, dry weather and with frequent hand washing. She is concerned about the progression. No doctor visit yet for this new pattern.",
-    sourceType: 'PROFILE',
+    sourceType: 'INTAKE_FORM',
+    physicianName: '',
     contributorId: 'pat-001',
     contributorName: 'Layla Hassan (symptom tracker)',
     contributorRole: 'PATIENT',
@@ -661,6 +694,7 @@ export const initialTimelineNodes: TimelineNode[] = [
       'Unclear if dupilumab should be considered',
       'Photo documentation not provided',
     ],
+    isFollowUpNeeded: false,
   },
   {
     nodeId: 'tn-017',
@@ -670,7 +704,9 @@ export const initialTimelineNodes: TimelineNode[] = [
     summary: 'Dr. Aisha Khan reviewed both patient-reported symptoms via Anamoria. Notes added.',
     details:
       'Dr. Aisha Khan reviewed Layla\'s two most recent patient-reported symptoms (exercise-induced dyspnea and worsening hand eczema) via the Anamoria Physician Dashboard. Clinical notes added. Exercise-induced dyspnea flagged for pulmonology referral. Eczema progression may indicate need for systemic therapy (dupilumab). Patient asked to book urgent appointment.',
-    sourceType: 'PHYSICIAN_EDIT',
+    sourceType: 'PHYSICIAN',
+    physicianName: 'Dr. Aisha Khan',
+    physicianClinic: 'Riverside Medical Centre',
     contributorId: 'phys-001',
     contributorName: 'Dr. Aisha Khan',
     contributorRole: 'PHYSICIAN',
@@ -689,7 +725,29 @@ export const initialTimelineNodes: TimelineNode[] = [
     ],
     category: 'NOTE',
     tags: ['physician review', 'clinical note', 'referral', 'dupilumab'],
+    isFollowUpNeeded: false,
   },
+    {
+      nodeId: 'tn-018',
+      eventDate: '2016-05-10',
+      approximateDate: false,
+      title: 'Profile updated — patient details edited',
+      summary: 'Patient updated contact details and preferred pharmacy in profile.',
+      details: 'Patient updated phone number and preferred pharmacy on their profile page.',
+      sourceType: 'PROFILE',
+      physicianName: '',
+      physicianClinic: undefined,
+      contributorId: 'pat-001',
+      contributorName: 'Layla Hassan',
+      contributorRole: 'PATIENT',
+      confidenceLevel: 'LOW',
+      verificationStatus: 'PATIENT_REPORTED',
+      relatedDocuments: [],
+      physicianNotes: [],
+      category: 'NOTE',
+      tags: ['profile', 'contact', 'patient'],
+      isFollowUpNeeded: false,
+    },
 ];
 
 export const initialMissingInfo: MissingInfo[] = [

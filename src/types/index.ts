@@ -1,10 +1,12 @@
 export type DataSource =
   | 'UPLOAD'
+  | 'PROFILE'
   | 'INTAKE_FORM'
   | 'CHAT_ASSISTANT'
-  | 'PROFILE'
-  | 'EMR_INGEST'
-  | 'PHYSICIAN_EDIT';
+  | 'PHYSICIAN'
+  | 'EMR';
+
+export type PriorityType = 'HIGH' | 'MEDIUM' | 'LOW';
 
 export type VerificationStatus =
   | 'PHYSICIAN_VERIFIED'
@@ -46,6 +48,11 @@ export interface TimelineNode {
   summary: string;
   details: string;
   sourceType: DataSource;
+  physicianName: string;
+  physicianClinic?: string;
+  priority?: PriorityType;
+  isFollowUpNeeded: boolean;
+  followUpInstructions?: string;
   contributorId: string;
   contributorName: string;
   contributorRole: 'PATIENT' | 'PHYSICIAN' | 'SYSTEM';
@@ -56,6 +63,16 @@ export interface TimelineNode {
   category: NodeCategory;
   tags: string[];
   missingInfo?: string[];
+}
+
+export type RequisitionStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
+
+export interface SubmittedFormNode extends TimelineNode {
+  requisitionType: string;
+  reasonForOrder: string;
+  tests?: string[];
+  images?: UploadedDocument[];
+  requisitionStatus: RequisitionStatus;
 }
 
 export interface UploadedDocument {
